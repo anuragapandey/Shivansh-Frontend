@@ -37,6 +37,11 @@ export default function CartDrawer() {
       return false
     }
 
+    if (customer.location.trim().length < 5) {
+      setCheckoutError('Delivery location must be at least 5 characters.')
+      return false
+    }
+
     return true
   }
 

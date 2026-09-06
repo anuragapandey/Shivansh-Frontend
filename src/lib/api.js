@@ -19,7 +19,13 @@ export async function apiRequest(path, options = {}) {
   const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    throw new Error(data.message || 'API request failed')
+    const details = data.details
+      ? Object.entries(data.details)
+          .flatMap(([field, messages]) => messages.map((message) => `${field}: ${message}`))
+          .join(' ')
+      : ''
+
+    throw new Error(details || data.message || 'API request failed')
   }
 
   return data
