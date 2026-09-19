@@ -7,6 +7,29 @@ import Navbar from './components/layout/Navbar.jsx'
 import { useCart } from './context/useCart.js'
 import { categories, categoryTiles, flavorShowcases, products, reviews } from './data/products.js'
 
+function OrderSuccess() {
+  const orderId = window.location.pathname.split('/').filter(Boolean).at(-1)
+
+  return (
+    <div className="min-h-screen bg-[#fff8e7]">
+      <Navbar searchQuery="" onSearchChange={() => {}} />
+      <main className="mx-auto grid min-h-[70vh] max-w-3xl place-items-center px-4 py-16 text-center">
+        <section className="w-full rounded-2xl border border-[#ead7af] bg-white p-8 shadow-sm">
+          <p className="text-sm font-black uppercase tracking-wide text-[#087c45]">Payment Successful</p>
+          <h1 className="mt-3 text-4xl font-black text-[#32150e]">Your Shivansh Snacks order is confirmed.</h1>
+          <p className="mt-4 text-sm font-bold leading-6 text-[#684437]">
+            Order ID: <span className="text-[#32150e]">{orderId}</span>
+          </p>
+          <a href="/" className="mt-7 inline-flex rounded-full bg-[#32150e] px-7 py-4 text-sm font-black text-white">
+            Continue Shopping
+          </a>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  )
+}
+
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-[#f7d96a]">
@@ -184,6 +207,10 @@ function App() {
 
   const bestSellers = products.filter((product) => product.isBestseller).slice(0, 8)
   const valuePacks = products.slice(0, 4)
+
+  if (window.location.pathname.startsWith('/order-success/')) {
+    return <OrderSuccess />
+  }
 
   return (
     <div className="min-h-screen bg-[#fff8e7]">

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from './AuthContext.jsx'
 import { CartContext } from './cartContextObject.js'
 
 const CART_STORAGE_KEY = 'shivansh-snacks-cart'
 
-const readStoredCart = () => {
+const readStoredCart = (storageKey) => {
   try {
-    const value = localStorage.getItem(CART_STORAGE_KEY)
+    const value = sessionStorage.getItem(storageKey)
     return value ? JSON.parse(value) : []
   } catch {
     return []
@@ -13,19 +14,35 @@ const readStoredCart = () => {
 }
 
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState(readStoredCart)
+  const { user } = useAuth()
+  const storageKey = user?.id ? `${CART_STORAGE_KEY}:${user.id}` : `${CART_STORAGE_KEY}:guest`
+  const [cartItems, setCartItems] = useState(() => readStoredCart(storageKey))
   const [isCartOpen, setIsCartOpen] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
-  }, [cartItems])
+    setCartItems(readStoredCart(storageKey))
+    setIsCartOpen(false)
+  }, [storageKey])
+
+  useEffect(() => {
+    sessionStorage.setItem(storageKey, JSON.stringify(cartItems))
+  }, [cartItems, storageKey])
 
   const addToCart = useCallback((product, quantity = 1) => {
     const payload = {
       id: product.id,
+      productId: product.productId || 'banana-chips',
       name: product.name,
+      flavorId: product.flavorId,
+      flavorName: product.flavorName,
+      flavorCategory: product.flavorCategory,
       price: product.price,
+      unitPrice: product.unitPrice || product.price,
+      lineTotal: (product.unitPrice || product.price) * quantity,
+      weightInGrams: product.weightInGrams,
       weight: product.weight,
+      weightLabel: product.weightLabel || product.weight,
+      customWeight: Boolean(product.customWeight),
       image: product.image,
       qty: quantity,
     }
@@ -35,7 +52,9 @@ export function CartProvider({ children }) {
       if (!existing) return [...items, payload]
 
       return items.map((item) =>
-        item.id === payload.id ? { ...item, qty: item.qty + quantity } : item,
+        item.id === payload.id
+          ? { ...item, qty: item.qty + quantity, lineTotal: item.unitPrice * (item.qty + quantity) }
+          : item,
       )
     })
     setIsCartOpen(true)
@@ -45,7 +64,7 @@ export function CartProvider({ children }) {
     setCartItems((items) =>
       items
         .map((item) =>
-          item.id === id ? { ...item, qty: Math.max(0, quantity) } : item,
+          item.id === id ? { ...item, qty: Math.max(0, quantity), lineTotal: item.unitPrice * Math.max(0, quantity) } : item,
         )
         .filter((item) => item.qty > 0),
     )
